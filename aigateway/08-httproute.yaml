@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: demo-llm
+  namespace: f5-bnk-instance
+spec:
+  parentRefs:
+  - name: demo-llm
+    sectionName: http
+    group: gateway.networking.k8s.io
+    kind: Gateway
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /v1
+    timeouts:
+      request: 300s
+      backendRequest: 300s

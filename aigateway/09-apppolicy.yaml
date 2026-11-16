@@ -1,0 +1,15 @@
+apiVersion: gateway.k8s.f5.com/v1alpha1
+kind: AppPolicy
+metadata:
+  name: demo-llm
+  namespace: f5-bnk-instance
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: demo-llm
+    sectionName: http
+  extensionRefs:
+  - group: inference.k8s.f5.com
+    kind: AIGatewayProfile
+    name: demo-llm

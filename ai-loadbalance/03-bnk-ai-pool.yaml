@@ -1,0 +1,14 @@
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: ai-inference-pool
+  namespace: ai-inference
+spec:
+  dynamicMembers:
+  - serviceName: ai-inference-svc
+    serviceNamespace: ai-inference
+  monitors:
+    http:
+    - sendString: "GET / HTTP/1.0\r\n\r\n"
+      interval: 5
+      timeout: 16

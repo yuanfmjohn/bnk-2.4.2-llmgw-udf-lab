@@ -1,0 +1,14 @@
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIProvider
+metadata:
+  name: pk-demo-ngc
+  namespace: f5-bnk-instance
+spec:
+  tenantRef:
+    name: demo
+  vendor: OpenAI
+  openAI:
+    baseURL: https://integrate.api.nvidia.com/v1
+  credentialRef:
+    name: pk-demo-ngc
+  enabled: true

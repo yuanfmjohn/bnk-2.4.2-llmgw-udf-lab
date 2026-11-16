@@ -1,0 +1,17 @@
+apiVersion: metrics.f5.com/v1alpha1
+kind: Scrape
+metadata:
+  name: gpu-dcgm-scrape
+  namespace: f5-cne-core
+spec:
+  scrapeClass: default-scrape-class
+  jobs:
+  - name: dcgm-gpu-utilization
+    query: "DCGM_FI_DEV_GPU_UTIL"
+    every: 15s
+    scrapeInterval: 15s
+  - name: dcgm-gpu-vram-free
+    query: "DCGM_FI_DEV_FB_FREE"
+    every: 15s
+    scrapeInterval: 15s
+

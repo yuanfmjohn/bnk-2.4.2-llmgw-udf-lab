@@ -1,0 +1,485 @@
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AITenant
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"inference.k8s.f5.com/v1alpha1","kind":"AITenant","metadata":{"annotations":{},"name":"demo"},"spec":{"displayName":"demo"}}
+  creationTimestamp: "2026-10-25T13:06:12Z"
+  generation: 1
+  name: demo
+  resourceVersion: "1348590"
+  uid: bb6496d2-ed63-40d8-8857-894f989e4afe
+spec:
+  displayName: demo
+status:
+  conditions:
+  - lastTransitionTime: "2026-10-25T13:06:13Z"
+    message: the tenant is accepted
+    observedGeneration: 1
+    reason: Accepted
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2026-10-25T13:06:13Z"
+    message: 1 AIGatewayProfiles name this tenant
+    observedGeneration: 1
+    reason: Ready
+    status: "True"
+    type: Ready
+  localAdminSecretRef:
+    name: aitenant-demo-admin
+    namespace: f5-bnk-instance
+  observedGeneration: 1
+  profiles: 1
+---
+apiVersion: v1
+data:
+  api-key: PEJBU0U2NF9FTkNPREVEX0FQSV9LRVk+
+kind: Secret
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"api-key":"PEJBU0U2NF9FTkNPREVEX0FQSV9LRVk+"},"kind":"Secret","metadata":{"annotations":{},"name":"pk-demo-ngc","namespace":"f5-bnk-instance"}}
+  creationTimestamp: "2026-11-09T19:18:55Z"
+  name: pk-demo-ngc
+  namespace: f5-bnk-instance
+  resourceVersion: "5195558"
+  uid: b5a94939-c8bf-4fdb-9feb-5f212b666eb4
+type: Opaque
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AICredential
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"inference.k8s.f5.com/v1alpha1","kind":"AICredential","metadata":{"annotations":{},"name":"pk-demo-ngc","namespace":"f5-bnk-instance"},"spec":{"secretRef":{"key":"api-key","name":"pk-demo-ngc"},"tenantRef":{"name":"demo"}}}
+  creationTimestamp: "2026-11-09T19:20:11Z"
+  generation: 1
+  name: pk-demo-ngc
+  namespace: f5-bnk-instance
+  resourceVersion: "5195781"
+  uid: 461099c9-25ae-4ff5-8d44-279539893f7d
+spec:
+  secretRef:
+    key: api-key
+    name: pk-demo-ngc
+  tenantRef:
+    name: demo
+status:
+  conditions:
+  - lastTransitionTime: "2026-11-09T19:20:11Z"
+    message: the Secret holds a key
+    observedGeneration: 1
+    reason: Ready
+    status: "True"
+    type: Ready
+  observedGeneration: 1
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIProvider
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"inference.k8s.f5.com/v1alpha1","kind":"AIProvider","metadata":{"annotations":{},"name":"pk-demo-ngc","namespace":"f5-bnk-instance"},"spec":{"credentialRef":{"name":"pk-demo-ngc"},"enabled":true,"openAI":{"baseURL":"https://integrate.api.nvidia.com/v1"},"tenantRef":{"name":"demo"},"vendor":"OpenAI"}}
+  creationTimestamp: "2026-11-09T19:20:11Z"
+  finalizers:
+  - inference.k8s.f5.com/aiprovider-pool
+  generation: 1
+  name: pk-demo-ngc
+  namespace: f5-bnk-instance
+  resourceVersion: "5197468"
+  uid: 10102680-4bb3-4cdc-a0ac-d99cbe32081d
+spec:
+  credentialRef:
+    name: pk-demo-ngc
+  enabled: true
+  openAI:
+    baseURL: https://integrate.api.nvidia.com/v1
+  tenantRef:
+    name: demo
+  vendor: OpenAI
+status:
+  conditions:
+  - lastTransitionTime: "2026-11-09T19:20:11Z"
+    message: spec observed by the controller; the aggregator projects and pushes it
+      to TMM
+    observedGeneration: 1
+    reason: Observed
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2026-11-09T19:20:58Z"
+    message: the controller resolved integrate.api.nvidia.com; this reflects the controller's
+      view; TMM resolves the host itself through its own DNS resolver
+    observedGeneration: 1
+    reason: Resolved
+    status: "True"
+    type: EndpointResolvable
+  - lastTransitionTime: "2026-11-09T19:24:59Z"
+    message: pool committed on all TMM endpoints
+    observedGeneration: 1
+    reason: Programmed
+    status: "True"
+    type: Programmed
+  observedGeneration: 1
+  poolRef: f5-bnk-instance.pk-demo-ngc-aigw-pool
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIModel
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"inference.k8s.f5.com/v1alpha1","kind":"AIModel","metadata":{"annotations":{},"name":"demo-deepseek-v41-flash","namespace":"f5-bnk-instance"},"spec":{"deployments":[{"name":"ngc-deepseek","pricing":{"inputPerMtok":150000,"outputPerMtok":600000},"providerRef":{"name":"pk-demo-ngc"},"state":"Active","upstream":"deepseek-ai/deepseek-v4.1-flash","weight":1}],"displayName":"DeepSeek V4.1 Flash","name":"deepseek-ai/deepseek-v4.1-flash","tenantRef":{"name":"demo"}}}
+  creationTimestamp: "2026-11-09T19:22:16Z"
+  generation: 1
+  name: demo-deepseek-v41-flash
+  namespace: f5-bnk-instance
+  resourceVersion: "5196155"
+  uid: 06e98ffa-c021-48bf-9679-9ed10e910867
+spec:
+  deployments:
+  - name: ngc-deepseek
+    pricing:
+      inputPerMtok: 150000
+      outputPerMtok: 600000
+    providerRef:
+      name: pk-demo-ngc
+    state: Active
+    upstream: deepseek-ai/deepseek-v4.1-flash
+    weight: 1
+  displayName: DeepSeek V4.1 Flash
+  name: deepseek-ai/deepseek-v4.1-flash
+  tenantRef:
+    name: demo
+status:
+  conditions:
+  - lastTransitionTime: "2026-11-09T19:22:16Z"
+    message: the model's public name is its own in its tenant in the namespace
+    observedGeneration: 1
+    reason: Accepted
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2026-11-09T19:22:16Z"
+    message: every deployment's provider exists and serves its dialects
+    observedGeneration: 1
+    reason: ResolvedRefs
+    status: "True"
+    type: ResolvedRefs
+  - lastTransitionTime: "2026-11-09T19:22:16Z"
+    message: every deployment has an input and an output rate
+    observedGeneration: 1
+    reason: Priced
+    status: "True"
+    type: Priced
+  deployments:
+  - dialects:
+    - openai
+    name: ngc-deepseek
+    priceSource: Spec
+    rates:
+      inputPerMtok: 150000
+      outputPerMtok: 600000
+    supportedAPIs:
+    - chat
+    - messages
+    - completions
+    - embeddings
+    - responses
+  observedGeneration: 1
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIModel
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"inference.k8s.f5.com/v1alpha1","kind":"AIModel","metadata":{"annotations":{},"name":"demo-gpt-oss-20b","namespace":"f5-bnk-instance"},"spec":{"deployments":[{"name":"ngc-gpt-oss-20b","pricing":{"inputPerMtok":150000,"outputPerMtok":600000},"providerRef":{"name":"pk-demo-ngc"},"state":"Active","upstream":"openai/gpt-oss-20b","weight":1}],"displayName":"OpenAI GPT OSS 20B","name":"openai/gpt-oss-20b","tenantRef":{"name":"demo"}}}
+  creationTimestamp: "2026-11-09T19:22:16Z"
+  generation: 1
+  name: demo-gpt-oss-20b
+  namespace: f5-bnk-instance
+  resourceVersion: "5196157"
+  uid: 594b733e-fd30-4f5e-a4ee-c2b0af3dd1e1
+spec:
+  deployments:
+  - name: ngc-gpt-oss-20b
+    pricing:
+      inputPerMtok: 150000
+      outputPerMtok: 600000
+    providerRef:
+      name: pk-demo-ngc
+    state: Active
+    upstream: openai/gpt-oss-20b
+    weight: 1
+  displayName: OpenAI GPT OSS 20B
+  name: openai/gpt-oss-20b
+  tenantRef:
+    name: demo
+status:
+  conditions:
+  - lastTransitionTime: "2026-11-09T19:22:16Z"
+    message: the model's public name is its own in its tenant in the namespace
+    observedGeneration: 1
+    reason: Accepted
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2026-11-09T19:22:16Z"
+    message: every deployment's provider exists and serves its dialects
+    observedGeneration: 1
+    reason: ResolvedRefs
+    status: "True"
+    type: ResolvedRefs
+  - lastTransitionTime: "2026-11-09T19:22:16Z"
+    message: every deployment has an input and an output rate
+    observedGeneration: 1
+    reason: Priced
+    status: "True"
+    type: Priced
+  deployments:
+  - dialects:
+    - openai
+    name: ngc-gpt-oss-20b
+    priceSource: Spec
+    rates:
+      inputPerMtok: 150000
+      outputPerMtok: 600000
+    supportedAPIs:
+    - chat
+    - messages
+    - completions
+    - embeddings
+    - responses
+  observedGeneration: 1
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIGatewayProfile
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"inference.k8s.f5.com/v1alpha1","kind":"AIGatewayProfile","metadata":{"annotations":{},"name":"demo-llm","namespace":"f5-bnk-instance"},"spec":{"auth":{"virtualKeys":{}},"failover":{"cooldown":"30s","honorRetryAfter":true,"maxAttempts":2,"on429":true,"on5xx":true},"promptCache":{},"providers":[{"providerRef":{"name":"pk-demo-ngc"}}],"tenantRef":{"name":"demo"}}}
+    reconcile-trigger: "1794252747"
+  creationTimestamp: "2026-10-25T13:07:51Z"
+  finalizers:
+  - inference.k8s.f5.com/aigatewayprofile-teardown
+  generation: 3
+  labels:
+    updated: "1792937779"
+  name: demo-llm
+  namespace: f5-bnk-instance
+  resourceVersion: "5258789"
+  uid: fe4e7b28-4cb6-44f6-904e-95290a02a24c
+spec:
+  auth:
+    virtualKeys: {}
+  failover:
+    cooldown: 30s
+    honorRetryAfter: true
+    maxAttempts: 2
+    on5xx: true
+    on429: true
+  promptCache: {}
+  providers:
+  - providerRef:
+      name: pk-demo-ngc
+  tenantRef:
+    name: demo
+status:
+  conditions:
+  - lastTransitionTime: "2026-10-25T13:10:13Z"
+    message: the profile belongs to tenant demo
+    observedGeneration: 3
+    reason: Accepted
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2026-11-09T19:32:59Z"
+    message: 2 models offered
+    observedGeneration: 3
+    reason: ResolvedRefs
+    status: "True"
+    type: ResolvedRefs
+  - lastTransitionTime: "2026-11-10T00:10:12Z"
+    message: config committed on all TMM endpoints
+    observedGeneration: 3
+    reason: Programmed
+    status: "True"
+    type: Programmed
+  models: 2
+  observedGeneration: 3
+  tenant: demo
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"Gateway","metadata":{"annotations":{},"name":"demo-llm","namespace":"f5-bnk-instance"},"spec":{"addresses":[{"type":"IPAddress","value":"10.1.200.85"}],"gatewayClassName":"bnk-gatewayclass","listeners":[{"allowedRoutes":{"kinds":[{"kind":"HTTPRoute"}]},"name":"http","port":80,"protocol":"HTTP"}]}}
+    reconcile-trigger: "1794252935"
+  creationTimestamp: "2026-10-25T13:07:51Z"
+  finalizers:
+  - handletmmconfig_inconsistency
+  generation: 1
+  name: demo-llm
+  namespace: f5-bnk-instance
+  resourceVersion: "5255924"
+  uid: ef9507ff-1623-492b-8435-aead8fbcd484
+spec:
+  addresses:
+  - type: IPAddress
+    value: 10.1.200.85
+  gatewayClassName: bnk-gatewayclass
+  listeners:
+  - allowedRoutes:
+      kinds:
+      - group: gateway.networking.k8s.io
+        kind: HTTPRoute
+      namespaces:
+        from: Same
+    name: http
+    port: 80
+    protocol: HTTP
+status:
+  addresses:
+  - type: IPAddress
+    value: 10.1.200.85
+  conditions:
+  - lastTransitionTime: "2026-11-10T00:01:42Z"
+    message: Gateway is accepted
+    observedGeneration: 1
+    reason: Accepted
+    status: "True"
+    type: Accepted
+  - lastTransitionTime: "2026-11-10T00:01:42Z"
+    message: Gateway is programmed
+    observedGeneration: 1
+    reason: Programmed
+    status: "True"
+    type: Programmed
+  - lastTransitionTime: "2026-11-10T00:01:42Z"
+    message: All references are resolved
+    observedGeneration: 1
+    reason: ResolvedRefs
+    status: "True"
+    type: ResolvedRefs
+  listeners:
+  - attachedRoutes: 1
+    conditions:
+    - lastTransitionTime: "2026-11-10T00:01:42Z"
+      message: Listener is accepted
+      observedGeneration: 1
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-11-10T00:01:42Z"
+      message: Listener is programmed
+      observedGeneration: 1
+      reason: Programmed
+      status: "True"
+      type: Programmed
+    - lastTransitionTime: "2026-11-10T00:01:42Z"
+      message: All references are resolved
+      observedGeneration: 1
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    name: http
+    supportedKinds:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.networking.k8s.io/v1","kind":"HTTPRoute","metadata":{"annotations":{},"name":"demo-llm","namespace":"f5-bnk-instance"},"spec":{"parentRefs":[{"name":"demo-llm","sectionName":"http"}],"rules":[{"matches":[{"path":{"type":"PathPrefix","value":"/v1"}}],"timeouts":{"backendRequest":"300s","request":"300s"}}]}}
+  creationTimestamp: "2026-10-25T13:07:51Z"
+  finalizers:
+  - handletmmconfig_inconsistency
+  generation: 1
+  name: demo-llm
+  namespace: f5-bnk-instance
+  resourceVersion: "5255923"
+  uid: 7995f01f-906e-4f0f-bb55-a271c9f0b011
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: demo-llm
+    sectionName: http
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /v1
+    timeouts:
+      backendRequest: 300s
+      request: 300s
+status:
+  parents:
+  - conditions:
+    - lastTransitionTime: "2026-10-25T13:07:51Z"
+      message: Accepted
+      observedGeneration: 1
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-10-25T13:07:51Z"
+      message: References Resolved
+      observedGeneration: 1
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    controllerName: f5.com/f5-bnk-instance-f5-cne-controller
+    parentRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: demo-llm
+      sectionName: http
+---
+apiVersion: gateway.k8s.f5.com/v1alpha1
+kind: AppPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"gateway.k8s.f5.com/v1alpha1","kind":"AppPolicy","metadata":{"annotations":{},"name":"demo-llm","namespace":"f5-bnk-instance"},"spec":{"extensionRefs":[{"group":"inference.k8s.f5.com","kind":"AIGatewayProfile","name":"demo-llm"}],"targetRefs":[{"group":"gateway.networking.k8s.io","kind":"Gateway","name":"demo-llm","sectionName":"http"}]}}
+    reconcile-trigger: "1794252982"
+  creationTimestamp: "2026-10-25T13:07:51Z"
+  generation: 1
+  name: demo-llm
+  namespace: f5-bnk-instance
+  resourceVersion: "5200018"
+  uid: c6df97a1-ae37-4029-b31b-b408f2abfa08
+spec:
+  extensionRefs:
+  - group: inference.k8s.f5.com
+    kind: AIGatewayProfile
+    name: demo-llm
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: demo-llm
+    sectionName: http
+status:
+  ancestors:
+  - ancestorRef:
+      group: gateway.networking.k8s.io
+      kind: Gateway
+      name: demo-llm
+      sectionName: http
+    conditions:
+    - lastTransitionTime: "2026-10-25T13:07:51Z"
+      message: the policy applies to its target
+      observedGeneration: 1
+      reason: Accepted
+      status: "True"
+      type: Accepted
+    controllerName: f5.com/f5-bnk-instance-f5-cne-controller
+  descendants:
+  - conditions:
+    - lastTransitionTime: "2026-10-25T13:07:51Z"
+      message: the extensionRef exists
+      observedGeneration: 1
+      reason: ResolvedRefs
+      status: "True"
+      type: ResolvedRefs
+    descendantRef:
+      group: inference.k8s.f5.com
+      kind: AIGatewayProfile
+      name: demo-llm

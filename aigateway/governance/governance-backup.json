@@ -1,0 +1,308 @@
+{
+  "tenant": {
+    "items": [
+      {
+        "name": "demo",
+        "displayName": "demo",
+        "state": "active",
+        "createdAt": "2026-10-25T13:06:12Z",
+        "ready": true,
+        "reason": "Ready",
+        "message": "1 AIGatewayProfiles name this tenant",
+        "conditions": [
+          {
+            "type": "Accepted",
+            "status": "True",
+            "reason": "Accepted",
+            "message": "the tenant is accepted"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "Ready",
+            "message": "1 AIGatewayProfiles name this tenant"
+          }
+        ]
+      },
+      {
+        "name": "llmgw-demo",
+        "displayName": "demo org for llm gw",
+        "state": "active",
+        "createdAt": "2026-10-24T07:21:15Z",
+        "ready": true,
+        "reason": "Ready",
+        "message": "0 AIGatewayProfiles name this tenant",
+        "conditions": [
+          {
+            "type": "Accepted",
+            "status": "True",
+            "reason": "Accepted",
+            "message": "the tenant is accepted"
+          },
+          {
+            "type": "Ready",
+            "status": "True",
+            "reason": "Ready",
+            "message": "0 AIGatewayProfiles name this tenant"
+          }
+        ]
+      }
+    ],
+    "count": 2
+  },
+  "virtual_keys": {
+    "items": [
+      {
+        "id": "vk-1c9237f74f4a5b857884048bffd7cb4c",
+        "tenant": "demo",
+        "formatVersion": 1,
+        "prefix": "f5vk_2QCmd17r",
+        "name": "ngc-demo-key-1794269042",
+        "principalId": "demo-app",
+        "providerKeys": [],
+        "modelScope": [
+          "deepseek-ai/deepseek-v4.1-flash",
+          "openai/gpt-oss-20b"
+        ],
+        "active": true,
+        "revoked": false,
+        "createdAt": "2026-11-10T00:04:02Z"
+      },
+      {
+        "id": "vk-7bedcaad2ff012ac0e9ca4fda73348a9",
+        "tenant": "demo",
+        "formatVersion": 1,
+        "prefix": "f5vk_2QCmd17t",
+        "name": "demo-key-all",
+        "principalId": "demo-app",
+        "providerKeys": [],
+        "modelScope": [
+          "gemini-flash-latest",
+          "gemini-3.5-flash-lite"
+        ],
+        "active": true,
+        "revoked": false,
+        "createdAt": "2026-10-25T23:07:40Z"
+      },
+      {
+        "id": "vk-ee62505c18278379a167110ee844789c",
+        "tenant": "demo",
+        "formatVersion": 1,
+        "prefix": "f5vk_2QCmd17x",
+        "name": "demo-key",
+        "principalId": "demo-app",
+        "providerKeys": [],
+        "modelScope": [
+          "gemini-flash-latest"
+        ],
+        "active": true,
+        "revoked": false,
+        "createdAt": "2026-10-25T13:07:41Z"
+      }
+    ],
+    "count": 3
+  },
+  "orgs": {
+    "items": [
+      {
+        "id": "default",
+        "displayName": "Default",
+        "modelScope": [],
+        "createdAt": "2026-10-25T13:10:39Z",
+        "rev": 1,
+        "default": true
+      },
+      {
+        "id": "demo-org",
+        "displayName": "demo-org",
+        "modelScope": [],
+        "createdAt": "2026-10-25T13:07:16Z",
+        "rev": 1
+      }
+    ],
+    "count": 2
+  },
+  "teams": {
+    "items": [
+      {
+        "id": "default",
+        "orgId": "default",
+        "name": "default",
+        "displayName": "Default",
+        "modelScope": [],
+        "createdAt": "2026-10-25T13:10:39Z",
+        "rev": 1,
+        "default": true
+      },
+      {
+        "id": "t-ec30b88defa0d17c",
+        "orgId": "demo-org",
+        "name": "default",
+        "displayName": "Default",
+        "modelScope": [],
+        "createdAt": "2026-10-25T13:07:16Z",
+        "rev": 1
+      }
+    ],
+    "count": 2
+  },
+  "principals": {
+    "items": [
+      {
+        "id": "demo-app",
+        "teamId": "t-ec30b88defa0d17c",
+        "displayName": "demo-app",
+        "kind": "service",
+        "active": true,
+        "modelScope": [],
+        "createdAt": "2026-10-25T13:07:41Z",
+        "rev": 1
+      },
+      {
+        "id": "local-8c6976e5b5410415bde908bd4dee15df",
+        "teamId": "default",
+        "displayName": "admin",
+        "email": "admin",
+        "role": "admin",
+        "kind": "user",
+        "active": true,
+        "modelScope": [],
+        "createdAt": "2026-10-25T13:10:39Z",
+        "rev": 1
+      }
+    ],
+    "count": 2
+  },
+  "models": {
+    "items": [
+      {
+        "id": "demo-deepseek-v41-flash",
+        "name": "deepseek-ai/deepseek-v4.1-flash",
+        "displayName": "DeepSeek V4.1 Flash",
+        "state": "active",
+        "deployments": [
+          {
+            "name": "ngc-deepseek",
+            "provider": "pk-demo-ngc",
+            "providerIdentity": "demo/pk-demo-ngc",
+            "vendor": "OpenAI",
+            "upstream": "deepseek-ai/deepseek-v4.1-flash",
+            "weight": 1,
+            "state": "Active",
+            "dialects": [
+              "openai"
+            ],
+            "supportedAPIs": [
+              "chat",
+              "messages",
+              "completions",
+              "embeddings",
+              "responses"
+            ],
+            "pricing": {
+              "inputPerMtok": 150000,
+              "outputPerMtok": 600000
+            },
+            "rates": {
+              "inputPerMtok": 150000,
+              "outputPerMtok": 600000
+            },
+            "priceSource": "Spec",
+            "priceState": "resolved"
+          }
+        ],
+        "conditions": [
+          {
+            "type": "Accepted",
+            "status": "True",
+            "observedGeneration": 1,
+            "lastTransitionTime": "2026-11-09T19:22:16Z",
+            "reason": "Accepted",
+            "message": "the model's public name is its own in its tenant in the namespace"
+          },
+          {
+            "type": "ResolvedRefs",
+            "status": "True",
+            "observedGeneration": 1,
+            "lastTransitionTime": "2026-11-09T19:22:16Z",
+            "reason": "ResolvedRefs",
+            "message": "every deployment's provider exists and serves its dialects"
+          },
+          {
+            "type": "Priced",
+            "status": "True",
+            "observedGeneration": 1,
+            "lastTransitionTime": "2026-11-09T19:22:16Z",
+            "reason": "Priced",
+            "message": "every deployment has an input and an output rate"
+          }
+        ]
+      },
+      {
+        "id": "demo-gpt-oss-20b",
+        "name": "openai/gpt-oss-20b",
+        "displayName": "OpenAI GPT OSS 20B",
+        "state": "active",
+        "deployments": [
+          {
+            "name": "ngc-gpt-oss-20b",
+            "provider": "pk-demo-ngc",
+            "providerIdentity": "demo/pk-demo-ngc",
+            "vendor": "OpenAI",
+            "upstream": "openai/gpt-oss-20b",
+            "weight": 1,
+            "state": "Active",
+            "dialects": [
+              "openai"
+            ],
+            "supportedAPIs": [
+              "chat",
+              "messages",
+              "completions",
+              "embeddings",
+              "responses"
+            ],
+            "pricing": {
+              "inputPerMtok": 150000,
+              "outputPerMtok": 600000
+            },
+            "rates": {
+              "inputPerMtok": 150000,
+              "outputPerMtok": 600000
+            },
+            "priceSource": "Spec",
+            "priceState": "resolved"
+          }
+        ],
+        "conditions": [
+          {
+            "type": "Accepted",
+            "status": "True",
+            "observedGeneration": 1,
+            "lastTransitionTime": "2026-11-09T19:22:16Z",
+            "reason": "Accepted",
+            "message": "the model's public name is its own in its tenant in the namespace"
+          },
+          {
+            "type": "ResolvedRefs",
+            "status": "True",
+            "observedGeneration": 1,
+            "lastTransitionTime": "2026-11-09T19:22:16Z",
+            "reason": "ResolvedRefs",
+            "message": "every deployment's provider exists and serves its dialects"
+          },
+          {
+            "type": "Priced",
+            "status": "True",
+            "observedGeneration": 1,
+            "lastTransitionTime": "2026-11-09T19:22:16Z",
+            "reason": "Priced",
+            "message": "every deployment has an input and an output rate"
+          }
+        ]
+      }
+    ],
+    "count": 2,
+    "resourceVersion": "5364359"
+  }
+}

@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-inference
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-inference-node1
+  namespace: ai-inference
+  labels:
+    app: ai-inference
+    gpu-node: worker1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-inference
+      gpu-node: worker1
+  template:
+    metadata:
+      labels:
+        app: ai-inference
+        gpu-node: worker1
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker1
+      containers:
+      - name: mock-llm-inference
+        image: hashicorp/http-echo:latest
+        args:
+        - "-text=AI LLM Server Endpoint [Worker1 - GPU Node H100] - Status: Optimal"
+        ports:
+        - containerPort: 5678
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-inference-node2
+  namespace: ai-inference
+  labels:
+    app: ai-inference
+    gpu-node: worker2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-inference
+      gpu-node: worker2
+  template:
+    metadata:
+      labels:
+        app: ai-inference
+        gpu-node: worker2
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker2
+      containers:
+      - name: mock-llm-inference
+        image: hashicorp/http-echo:latest
+        args:
+        - "-text=AI LLM Server Endpoint [Worker2 - GPU Node H100] - Status: Optimal"
+        ports:
+        - containerPort: 5678
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-inference-svc
+  namespace: ai-inference
+  annotations:
+    k8s.f5.com/allow-cross-namespace-refs: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app: ai-inference
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5678

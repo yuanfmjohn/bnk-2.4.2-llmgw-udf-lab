@@ -1,0 +1,6 @@
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AITenant
+metadata:
+  name: demo
+spec:
+  displayName: Demo Tenant

@@ -1,0 +1,211 @@
+# UDF deployment: LLM Gateway on CNE 2.4  (id e18ec0e7-994e-4710-8647-8bfd3b14790e)
+# Surveyed: 2026-11-16 (Asia/Singapore). Region: Oregon, USA. 64 vCPU / 240 GB RAM.
+# provenance keys:  udf = UDF Components / IP Addresses tabs
+#                   kubectl = read-only kubectl on controller web shell (KUBECONFIG=/etc/kubernetes/admin.conf)
+#                   inferred = deduced, not directly observed
+schema: lab-topology/v1
+
+networks:
+  - {id: mgmt,           udf_name: Management,     cidr: 10.1.1.0/24,   role: "OOB mgmt + Kubernetes node network (kubelet/API/Calico underlay)"}
+  - {id: client-net,     udf_name: client-net,     cidr: 10.1.10.0/24,  role: "client side"}
+  - {id: gw-internet,    udf_name: gw-internet,    cidr: 10.1.100.0/24, role: "gateway tier, internet side"}
+  - {id: gw-dc,          udf_name: gw-dc,          cidr: 10.1.110.0/24, role: "gateway tier, DC side"}
+  - {id: bnk-ext,        udf_name: bnk-ext,        cidr: 10.1.200.0/24, role: "BNK TMM external VLAN (ingress VIPs, default egress)"}
+  - {id: bnk-k8s-int,    udf_name: bnk-k8s-int,    cidr: 10.1.210.0/24, role: "BNK TMM internal VLAN, shared with app workers"}
+  - {id: bnk-pod-direct, udf_name: bnk-pod-direct, cidr: 10.1.220.0/24, role: "third TMM attachment (cnf-net); no F5SPKVlan configured"}
+
+overlay_networks:   # provenance: kubectl
+  - {id: pod-cidr,     cidr: 192.168.0.0/16, cni: calico, encap: "VXLAN CrossSubnet"}
+  - {id: service-cidr, cidr: 10.96.0.0/12}
+
+non_k8s_nodes:      # provenance: udf (services = UDF access methods only; not probed)
+  - name: big-ip
+    type: "F5 BIG-IP 17.5.1.3-0.0.19"
+    state: Running
+    interfaces:
+      - {network: mgmt,        ips: [10.1.1.11]}
+      - {network: gw-internet, ips: [10.1.100.110, 10.1.100.111, 10.1.100.112, 10.1.100.113, 10.1.100.114]}
+      - {network: gw-dc,       ips: [10.1.110.110, 10.1.110.111, 10.1.110.112, 10.1.110.113, 10.1.110.114]}
+    exposed_services: [{name: ssh, udf_port: 47007}, {name: web-shell}, {name: tmui, proto: https}]
+  - name: cnf-std
+    type: "Ubuntu 24.04 LTS"
+    state: Running
+    interfaces:
+      - {network: mgmt,        ips: [10.1.1.10]}
+      - {network: gw-internet, ips: [10.1.100.100, 10.1.100.101, 10.1.100.102, 10.1.100.103, 10.1.100.104]}
+      - {network: gw-dc,       ips: [10.1.110.100, 10.1.110.101, 10.1.110.102, 10.1.110.103, 10.1.110.104]}
+    exposed_services: [{name: ssh, udf_port: 47006}, {name: web-shell}]
+    note: "not a member of the surveyed Kubernetes cluster"
+  - name: vyos-230215
+    type: "VyOS 1.4 rolling 20230215 (router)"
+    state: Booting          # as shown by UDF at survey time
+    interfaces:
+      - {network: mgmt,        ips: [10.1.1.5]}
+      - {network: gw-internet, ips: [10.1.100.50, 10.1.100.51]}
+      - {network: gw-dc,       ips: [10.1.110.50, 10.1.110.51]}
+      - {network: bnk-ext,     ips: [10.1.200.50, 10.1.200.51]}
+    exposed_services: [{name: ssh, udf_port: 47001}]
+    note: "only node bridging gw-internet / gw-dc / bnk-ext"
+  - name: client
+    type: "Ubuntu 24.04 LTS"
+    state: Running
+    interfaces:
+      - {network: mgmt,       ips: [10.1.1.4]}
+      - {network: client-net, ips: [10.1.10.40, 10.1.10.41, 10.1.10.42, 10.1.10.43, 10.1.10.44]}
+    exposed_services: [{name: ssh, udf_port: 47000}, {name: web-shell}]
+    note: "client-net has no other member; no L3 path to bnk-ext visible in UDF"
+
+k8s_cluster:        # provenance: kubectl unless marked
+  version: v1.35.9
+  node_internal_ip_network: mgmt
+  namespaces: [calico-system, cert-manager, default, f5-bnk-instance, f5-cne-core, kube-node-lease, kube-public, kube-system, tigera-operator]
+  nodes:
+    - name: controller
+      udf_name: controller
+      role: control-plane
+      taints: [node-role.kubernetes.io/control-plane]
+      pod_cidr: 192.168.0.0/24
+      interfaces:
+        - {network: mgmt,  ips: [10.1.1.12], os_if: ens5}
+        - {network: gw-dc, ips: [10.1.110.120, 10.1.110.121, 10.1.110.122, 10.1.110.123, 10.1.110.124], provenance: udf, note: "no IPv4 configured in OS; only ens5 + vxlan.calico have addresses"}
+      tmm: false
+      exposed_services: [{name: ssh, udf_port: 47008}, {name: web-shell}, {name: kube-apiserver, port: 6443, provenance: inferred}]
+    - name: worker1
+      udf_name: worker1-bnk
+      role: worker-tmm
+      labels: {app: f5-tmm, f5-tmm: node, k8s.f5.com/has-workload: "true"}
+      pod_cidr: 192.168.1.0/24
+      interfaces:
+        - {network: mgmt,           ips: [10.1.1.6]}
+        - {network: bnk-ext,        ips: [10.1.200.60, 10.1.200.61, 10.1.200.62, 10.1.200.63, 10.1.200.64]}
+        - {network: bnk-k8s-int,    ips: [10.1.210.60, 10.1.210.61, 10.1.210.62, 10.1.210.63, 10.1.210.64]}
+        - {network: bnk-pod-direct, ips: [10.1.220.60, 10.1.220.61, 10.1.220.62, 10.1.220.63, 10.1.220.64]}
+      tmm: true
+      exposed_services: [{name: ssh, udf_port: 47002}, {name: web-shell}]
+    - name: worker2
+      udf_name: worker2-app
+      role: worker-app
+      labels: {k8s.f5.com/has-workload: "true"}
+      pod_cidr: 192.168.2.0/24
+      interfaces:
+        - {network: mgmt,        ips: [10.1.1.7]}
+        - {network: bnk-k8s-int, ips: [10.1.210.70, 10.1.210.71]}
+      tmm: false
+      exposed_services: [{name: ssh, udf_port: 47003}, {name: web-shell}]
+    - name: worker3
+      udf_name: worker3-bnk
+      role: worker-tmm
+      labels: {app: f5-tmm, f5-tmm: node, k8s.f5.com/has-workload: "true"}
+      pod_cidr: 192.168.3.0/24
+      interfaces:
+        - {network: mgmt,           ips: [10.1.1.8]}
+        - {network: bnk-ext,        ips: [10.1.200.80, 10.1.200.81, 10.1.200.82, 10.1.200.83, 10.1.200.84]}
+        - {network: bnk-k8s-int,    ips: [10.1.210.80, 10.1.210.81, 10.1.210.82, 10.1.210.83, 10.1.210.84]}
+        - {network: bnk-pod-direct, ips: [10.1.220.80, 10.1.220.81, 10.1.220.82, 10.1.220.83, 10.1.220.84]}
+      tmm: true
+      exposed_services: [{name: ssh, udf_port: 47004}, {name: web-shell}]
+    - name: worker4
+      udf_name: worker4-app
+      role: worker-app
+      labels: {k8s.f5.com/has-workload: "true"}
+      pod_cidr: 192.168.5.0/24
+      interfaces:
+        - {network: mgmt,        ips: [10.1.1.9]}
+        - {network: bnk-k8s-int, ips: [10.1.210.90, 10.1.210.91]}
+      tmm: false
+      exposed_services:
+        - {name: ssh, udf_port: 47005}
+        - {name: web-shell}
+        - {name: llmgw-console, udf_access: true, backend: "svc f5-aigateway-console NodePort 30964 -> 3000", backend_provenance: inferred}
+
+  tmm:
+    namespace: f5-bnk-instance
+    workload: "DaemonSet f5-tmm, nodeSelector app=f5-tmm"
+    pods:
+      - {name: f5-tmm-8r9qx, node: worker1, pod_ip: 192.168.235.169, containers_ready: "7/7"}
+      - {name: f5-tmm-lmnp9, node: worker3, pod_ip: 192.168.182.59,  containers_ready: "7/7"}
+    attachments:    # Multus NADs, all macvlan passthru, no IPAM
+      - {nad: external-net, host_if: ens6, tmm_if: "1.1", vlan_cr: external-vlan, network: bnk-ext,     self_ips: [10.1.200.80, 10.1.200.60], prefix: 24, internal: false}
+      - {nad: internal-net, host_if: ens7, tmm_if: "1.2", vlan_cr: internal-vlan, network: bnk-k8s-int, self_ips: [10.1.210.80, 10.1.210.60], prefix: 24, internal: true}
+      - {nad: cnf-net,      host_if: ens8, tmm_if: null,  vlan_cr: null,          network: bnk-pod-direct, network_provenance: inferred, self_ips: []}
+    static_routes:
+      - {name: cluster-pod-route,    dest: 192.168.0.0/16, gateway: 169.254.1.1}
+      - {name: cluster-svc-route,    dest: 10.96.0.0/12,   gateway: 169.254.1.1}
+      - {name: default-egress-route, dest: 0.0.0.0/0,      gateway: 10.1.200.1}
+
+  ingress:
+    gateway_class: {name: bnk-gatewayclass, controller: f5.com/f5-bnk-instance-f5-cne-controller}
+    gateways:
+      - {name: demo-llm, namespace: f5-bnk-instance, address: 10.1.200.85, network: bnk-ext, listeners: [{name: http, proto: HTTP, port: 80}], programmed: true, served_by: [f5-tmm@worker1, f5-tmm@worker3]}
+    httproutes:
+      - {name: demo-llm, namespace: f5-bnk-instance, parent: demo-llm, backend_refs: []}
+
+  ai_gateway:
+    namespace: f5-bnk-instance
+    cr: {kind: AIGateway, name: f5-aigateway, clickhouse: true, console_image: "f5-aigateway-ui:v0.11.0", clickhouse_image: "clickhouse-server:24.8"}
+    data_plane: "in TMM (worker1, worker3); no separate AI gateway proxy pod exists"
+    pods:
+      - {name: f5-aigateway-console-7d84cf9dcc-h2zh9, node: worker4, pod_ip: 192.168.199.184}
+      - {name: f5-aigateway-clickhouse-0,             node: worker2, pod_ip: 192.168.189.119}
+    services:
+      - {name: f5-aigateway-console,      ns: f5-bnk-instance, type: NodePort,  cluster_ip: 10.99.1.1,      ports: ["3000:30964/TCP"]}
+      - {name: f5-aigateway-clickhouse,   ns: f5-bnk-instance, type: ClusterIP, cluster_ip: 10.102.245.230, ports: ["8123/TCP", "9000/TCP"]}
+      - {name: f5-aigateway-hsl-receiver, ns: f5-cne-core,     type: ClusterIP, cluster_ip: 10.104.126.156, ports: ["5140/TCP"]}
+    tenants:   [{name: demo, ready: true}, {name: llmgw-demo, ready: true}]
+    providers:
+      - {name: pk-demo-ngc, vendor: OpenAI, tenant: demo, pool: pk-demo-ngc-aigw-pool}
+      - {name: pk-42515dcf854a0080fa389b4da0c15f12, vendor: Gemini, tenant: llmgw-demo, pool: pk-42515dcf854a0080fa389b4da0c15f12-aigw-pool}
+    models:
+      - {name: demo-deepseek-v41-flash, model: deepseek-ai/deepseek-v4.1-flash, tenant: demo, accepted: true}
+      - {name: demo-gpt-oss-20b,        model: openai/gpt-oss-20b,              tenant: demo, accepted: true}
+    profiles:
+      - {name: demo-llm, tenant: demo, models: 2, programmed: false, status: "waiting for Gateway f5-bnk-instance/demo-llm to reconcile the prepared AI profile"}
+
+  other_pod_placement:
+    worker1: [f5-dssm-db-2, f5-afm, f5-spk-cwc, f5-toda-fluentd, f5-observer-operator, f5-coremond, f5-spk-csrc(hostNetwork)]
+    worker2: [f5-dssm-db-0, f5-dssm-sentinel-0, f5-observer-0, f5-observer-receiver-0, f5-coremond, f5-spk-csrc(hostNetwork)]
+    worker3: [f5-cne-controller, f5-dssm-sentinel-2, f5-rabbit, f5-ipam-ctlr, otel-collector, f5-crdconversion, f5-lifecycle-operator, f5-coremond, f5-spk-csrc(hostNetwork)]
+    worker4: [f5-dssm-db-1, f5-dssm-sentinel-1, f5-coremond, f5-spk-csrc(hostNetwork)]
+
+  nodeport_services:    # reachable on every node's mgmt IP
+    - {name: f5-aigateway-console, ns: f5-bnk-instance, ports: ["3000:30964/TCP"]}
+    - {name: f5-spk-cwc,           ns: f5-cne-core,     ports: ["38081:30881/TCP", "19891:30690/TCP", "19894:31573/TCP"]}
+
+  clusterip_services:
+    f5-bnk-instance:
+      - {name: f5-tmm,                ports: [19891, 19892, 19893, 19895, 19896, 19897]}
+      - {name: f5-cne-controller-api, ports: [8443]}
+      - {name: f5-dssm-db,            ports: [6379, 19891]}
+      - {name: f5-dssm-sentinel,      ports: [26379, 19891]}
+      - {name: f5-validation-svc,     ports: [3340]}
+      - {name: grpc-svc,              ports: [8750, 8850]}
+      - {name: grpc-pccd-svc,         ports: [8750]}
+      - {name: grpc-pod-mgr-svc,      ports: [8751]}
+      - {name: grpc-blobd-svc,        ports: [9222]}
+      - {name: f5-afm,                ports: [19894], headless: true}
+    f5-cne-core:
+      - {name: crdconversion-webhook-svc, ports: [9750]}
+      - {name: f5-coremond,           ports: [19891, 8088]}
+      - {name: f5-csm-qkview,         ports: [19896]}
+      - {name: f5-csrc-grpc-svc,      ports: [28751]}
+      - {name: f5-observer-operator,  ports: [8088, 19891]}
+      - {name: f5-rabbit,             ports: [19891]}
+      - {name: rabbitmq-server,       ports: [5671]}
+      - {name: f5-toda-fluentd,       ports: [54321, 19891]}
+      - {name: otel-collector-svc,    ports: [4317, 9090]}
+
+links:    # node <-> L2 segment adjacency
+  mgmt:           [big-ip, cnf-std, vyos-230215, client, controller, worker1, worker2, worker3, worker4]
+  client-net:     [client]
+  gw-internet:    [big-ip, cnf-std, vyos-230215]
+  gw-dc:          [big-ip, cnf-std, vyos-230215, controller]
+  bnk-ext:        [vyos-230215, worker1, worker3]
+  bnk-k8s-int:    [worker1, worker2, worker3, worker4]
+  bnk-pod-direct: [worker1, worker3]
+
+findings:
+  - "Gateway VIP 10.1.200.85 is outside the bnk-ext addresses UDF assigns to worker1 (.60-.64) and worker3 (.80-.84)."
+  - "TMM default egress next hop is 10.1.200.1 (UDF subnet gateway), not VyOS 10.1.200.50."
+  - "AIGatewayProfile demo-llm is PROGRAMMED=False; HTTPRoute demo-llm has no backendRefs."
+  - "vyos-230215 showed state Booting while the deployment had been up ~9 hours."
+  - "cnf-net is attached to both TMM pods but has no F5SPKVlan, so bnk-pod-direct carries no TMM self IP."

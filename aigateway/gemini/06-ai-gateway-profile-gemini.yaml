@@ -1,0 +1,20 @@
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIGatewayProfile
+metadata:
+  name: demo-llm
+  namespace: f5-bnk-instance
+spec:
+  tenantRef:
+    name: demo
+  auth:
+    virtualKeys: {}
+  promptCache: {}
+  failover:
+    on429: true
+    on5xx: true
+    maxAttempts: 2
+    cooldown: 30s
+    honorRetryAfter: true
+  providers:
+  - providerRef:
+      name: pk-demo-gemini

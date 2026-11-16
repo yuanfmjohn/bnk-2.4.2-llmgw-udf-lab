@@ -1,0 +1,10 @@
+{
+  "model": "gemini-flash-latest",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Explain how AI works in 5 words or less."
+    }
+  ],
+  "max_tokens": 30
+}

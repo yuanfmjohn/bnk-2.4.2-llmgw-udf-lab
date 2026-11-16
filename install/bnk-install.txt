@@ -1,0 +1,329 @@
+Script started on 2026-05-21 03:46:45+00:00 [TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="166" LINES="60"]
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ ll[K[Kpwd
+[?2004l/home/ubuntu/bnkinstall
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ ll
+[?2004ltotal 44
+drwxrwxr-x  2 ubuntu ubuntu 4096 May 21 03:45 [0m[01;34m.[0m/
+drwxr-x--- 10 ubuntu ubuntu 4096 May 21 03:46 [01;34m..[0m/
+-rw-rw-r--  1 ubuntu ubuntu 1426 May 21 03:40 cne-instance-f5-bnk-instance.yaml
+-rw-rw-r--  1 ubuntu ubuntu 3189 May 21 03:28 cne_pull_64.json
+-rwxr--r--  1 ubuntu ubuntu  763 May 21 03:26 [01;32mcreate-far-pull-secret-manifest.sh[0m*
+-rwxr--r--  1 ubuntu ubuntu  132 May 21 03:25 [01;32menv.sh[0m*
+-rw-rw-r--  1 ubuntu ubuntu  362 May 21 03:29 f5-lifecycle-operator-override-values.yaml
+-rwxr--r--  1 ubuntu ubuntu  947 May 21 03:26 [01;32mget-cne-chart-version.sh[0m*
+-rw-rw-r--  1 ubuntu ubuntu  664 May 21 03:37 k8s-macvlan-nad.yaml
+-rw-rw-r--  1 ubuntu ubuntu  343 May 21 03:44 k8s-nfs-storageclass.yaml
+-rw-rw-r--  1 ubuntu ubuntu  824 May 21 03:35 otel-certs.yaml
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #list of all basec [K[K[Ke files for installation
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #2 k8s yamls for nfs and macvlan net=a[K[K-attach-definition [K[K[K[K[K[K[K[K creation
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #1 env.sh script for env varialbe[K[K[Kble in installation
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #2 script[K[K[K[K[K[Kbash scripts from BNK site for manifest chart and [K[K[K[Kversion extraction as well as [K[K[K[K[K[K[K[K[K[K[K[Kå[K[C[C[1P[1@1
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #1 bash script for far-pull-secret creation
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #3 yamls[K[K[K[K[KBNK yamls for 1) otel certs creation; 2) f5-[K flo instla[Kallation[K[K[K[K[K[K[K[K[Kallation; 3) f5 cne [Kinstance installation
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #4[K1 BNK yaml for si[K[Kfinal step li[K[Kjwt license creation.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ #first lets load the [K[K[K[K[K[K[K[K[Kinstall the preconditions i[Kon k8s.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cat k8s-nfs-storageclass.yaml 
+[?2004lapiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 10.1.1.4
+  share: /mnt/nfs_share
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true 
+mountOptions:
+  - hard
+  - nfsvers=4.0
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubectl apply -f k8s-nfs-storageclass.yaml ^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubectl get storagte[K[K[Kgeclass nfs
+[?2004lNAME            PROVISIONER      RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+nfs (default)   nfs.csi.k8s.io   Delete          Immediate           true                   10d
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kube[K[K[K[K# nfs storageclass is created and set to default.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ # next lets install [K[K[K[K[K[K[K[K[K[Ks create macvlan/DPU SF[K[Ksf i[Knetwork-attachment0-d[K[K[K-definition
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubec[K[K[K[K[Kcat k8s-macvlan-nad.yaml 
+[?2004lapiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: external-net
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens6",
+      "mode": "passthru",
+      "ipam": {
+      },
+      "logLevel": "debug",
+      "logFile": "/var/log/net-attach-external.log"
+    }'
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: internal-net
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "ens7",
+      "mode": "passthru",
+      "ipam": {
+      },
+      "logLevel": "debug",
+      "logFile": "/var/log/net-attach-internal.log"
+    }'
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubectl apply -f k8s-macvlan-nad.yaml -n f50-[K[K-cne-core^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubectl create f5-cne-c[K[K[K[K[K[K[K[Knamespce[K[K[Kpace f5-cne-core^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cat k8s-macvlan-nad.yaml [K[K[Kkubectl crate ne[Kamespace f5-[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kate[K[K[K[Keate namespace f5-bnk-instance^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kub[K[K[Kkubectl appp[Kly -f k8s-macvlan-nad.yaml -n f5-cne-core^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubectl get net-attach-def -n f5-cne-core
+[?2004lNo resources found in f5-cne-core namespace.
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubectl get net-attach-def -n f5-cne-core[K[K[K[K[K[K[K[Kbnk-instance
+[?2004lNAME           AGE
+cnf-net        9d
+external-net   9d
+internal-net   9d
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ kubec[K[K[K[K[K# ma[K[Knet-attach-def is created now
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ @[K#next step [K[K[K[K[K[K[K[K[K[K next step apply [K[K[K[K[K[Kretrieve and apply flo[1@i[1@n[1@s[1@t[C[1@a[1@l[2@l [1@m[C[1@a[1@n[1@i[1@f[1@e[1@s[1@t[1@ 
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cp ../bnk/install/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170.tgz .
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cp ../bnk/install/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170.tgz .[C[1P .[1P .[1P .[1P ../ .[1P .[1P ./ .[C[C[C[1@-[1@r[1@ 
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ ls
+[?2004lcne-instance-f5-bnk-instance.yaml   [0m[01;32menv.sh[0m                                            f5-lifecycle-operator-override-values.yaml  k8s-nfs-storageclass.yaml
+cne_pull_64.json                    [01;34mf5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[0m      [01;32mget-cne-chart-version.sh[0m                    otel-certs.yaml
+[01;32mcreate-far-pull-secret-manifest.sh[0m  [01;31mf5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170.tgz[0m  k8s-macvlan-nad.yaml
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cd f5[K[K[K[K[Kcp gen-cne-chart-version.sh f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170/
+[?2004lcp: cannot stat 'gen-cne-chart-version.sh': No such file or directory
+[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cp get-cne-chart-version.sh f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170/
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cp f5-fl[K[Klifecycle-operator-override-values.yaml f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170/
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cp cne-instance-f5-bnk-instance.yaml f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170/
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall[01;32mubuntu@client[00m:[01;34m~/bnkinstall[00m$ cd f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170//[K
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ ls
+[?2004lChart.yaml                                      [0m[01;32mcreate-far-pull-secret-manifest.sh[0m  [01;31mf5-cert-gen-0.9.3.tgz[0m                       far-pull-secret.yaml
+[01;34mapi-server-secrets[0m                              cwc-license-certs.yaml              f5-cne-cluster-license.yaml                 [01;32mget-cne-chart-version.sh[0m
+bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170.yaml  cwc-license-client-certs.yaml       f5-cwc-api-client.crt                       otel-certs.yaml
+[01;34mcert-gen[0m                                        [01;34mf5-bnk-cis[0m                          f5-cwc-api-client.key
+cne-instance-f5-bnk-instance-cis.yaml           [01;31mf5-bnk-cis-v3.0.6-0.0.5.tgz[0m         f5-cwc-api-root.crt
+cne-instance-f5-bnk-instance.yaml               f5-bnk-cis-values.yaml              f5-lifecycle-operator-override-values.yaml
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # bash scre[Kipt get-cne-chart-version.sh is for [K[K[K[Kused in all installation steps to extract the corre ct v[Kchars[Kts mver[K[K[K[Kversion of components.[K and has to be placed in untarred f5-bigti[K[K-[Kip manifest folder.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # al [Kl other yamls are also moved here for simplicity
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # apply flo now
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl apply -f f5-lifecycle-operator-override-values.yaml -n f5-cne-core^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # flo[K[K[Kcheck if flot [K[K is installed successfully.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get pod -n f5-f5-cne-ci[K[K[K[K[K[K[K[K[Kcne-core
+[?2004lNAME                                    READY   STATUS    RESTARTS      AGE
+f5-lifecycle-operator-889d79b7c-mmq96   1/1     Running   1 (18h ago)   2d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ next apply [K[K[K[K[K[K[K[K[K[K[K# apply flo now
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [7mhelm install f5-lifecycle-operator \[27m
+[7m  oci://$CNE_REPO/charts/f5-lifecycle-operator \[27m
+[7m  --version $(./get-cne-chart-version.sh f5-lifecycle-operator) \[27m
+[7m  --namespace f5-cne-core \[27m
+[7m  --values f5-lifecycle-operator-override-values.yaml[27m[A[A[A[A]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [21P# apply flo now
+[K
+[K
+[K
+[K[A[A[A[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Chelm install f5-lifecycle-operator \
+  oci://$CNE_REPO/charts/f5-lifecycle-operator \
+  --version $(./get-cne-chart-version.sh f5-lifecycle-operator) \
+  --namespace f5-cne-core \
+  --values f5-lifecycle-operator-override-values.yaml^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # apply flo nowkubectl get pod -n f5-cne-core# check if flo is installed successfully.[11Pkubectl get pod -n f5-cne-core# check if flo is installed successfully.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # check if flo is installed successfully.[26Papply flo nowkubectl get pod -n f5-cne-core
+[?2004lNAME                                    READY   STATUS    RESTARTS      AGE
+f5-lifecycle-operator-889d79b7c-mmq96   1/1     Running   1 (18h ago)   2d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ #n[K next create the CWC authentication  [Kcredentials.^C[K^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ ^[[200~sh cert-gen/gen_cert.sh \
+[?2004l[?2004h>   -s=api-server \
+[?2004l[?2004h>   -a=f5-spk-cwc.f5-cne-core.svc.cluster.local \
+[?2004l[?2004h>   -n=1~[K^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ ll | grep cwc | grep yaml
+[?2004l-rw-rw-r-- 1 ubuntu ubuntu  5706 May 21 03:56 cwc-license-certs.[01;31m[Kyaml[m[K
+-rw-rw-r-- 1 ubuntu ubuntu  5657 May 21 03:56 cwc-license-client-certs.[01;31m[Kyaml[m[K
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # 2 ya[K[Kcwc tls ce[Kre[K[K[Kcerts are created. apply them to cluster.[K[K[K[K[K[K[K[Kf5-cne0-c[K[K[K-core namespace^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [7mkubectl get secret cwc-license-client-certs \[27m
+[7m  --namespace f5-cne-core -o json | \[27m
+[7m  jq -r '.data["client-key"]' | \[27m
+[7m  base64 -d > f5-cwc-api-client.key[27m^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [7mkubectl create \[27m
+[7m  -f cwc-license-certs.yaml \[27m
+[7m  -f cwc-license-client-certs.yaml \[27m
+[7m  --namespace f5-cne-core[27m^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get secret -n[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K# check if all secrets crated^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get secret -n f5-cne-core | grep cwc*certs
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get secret -n f5-cne-core | grep cwc*certs[K[K[K[K[K[K
+[?2004l[01;31m[Kcwc[m[K-license-certs                               Opaque                           3      9d
+[01;31m[Kcwc[m[K-license-client-certs                        Opaque                           3      9d
+tls-[01;31m[Kcwc[m[K-amqp-clt-secret                         kubernetes.io/tls                3      9d
+tls-[01;31m[Kcwc[m[Kfluentbit-tcp-clt-secret                 kubernetes.io/tls                3      9d
+tls-spk[01;31m[Kcwc[m[K-grpc-svr-secret                      kubernetes.io/tls                3      9d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ #next we can install b[Kcne instance (BNK dataplace[K[Kne)
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ e[Kmake sure to use right [K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K# make sure to use righ tinterf[K[K[K[K[K[K[K[Kt face for [K[K[K[K[K[K[K[K[Kinterface for [K[K[Krom net-attach-def
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get net-attach-def 0-n [K[K[K[K-n f50-b[K[K[K-bnk-instance
+[?2004lNAME           AGE
+cnf-net        9d
+external-net   9d
+internal-net   9d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ @cre[K[K[K[K# also [K[K[K[K[Kcreate the otel certs
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl apply -f otel-certs.yaml -n f5-bnk-instance^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get secret -n f5-bnk-instance | grep otel
+[?2004lexternal-f5ing[01;31m[Kotel[m[Ksvr-secret                  kubernetes.io/tls                3      9d
+external-[01;31m[Kotel[m[Ksvr-secret                       kubernetes.io/tls                3      9d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # otel s[Kcerts a[Kinstalled.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ k[K# install cne instance
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [7mkubectl apply -f cne-instance-${CNE_INSTANCE_NAMESPACE}.yaml \[27m
+[7m  --namespace $CNE_INSTANCE_NAMESPACE[27m[A]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl apply -f cne-instance-${CNE_INSTANCE_NAMESPACE}.yaml \
+  --namespace $CNE_INSTANCE_NAMESPACE^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ cat cne-instance-f5-bnk-instance.yaml 
+[?2004lapiVersion: k8s.f5.com/v1
+kind: CNEInstance
+metadata:
+  name: f5-bnk-instance
+spec:
+  product:
+    gatewayAPI: true
+    type: BNK
+  manifestVersion: 2.3.0-3.2598.3-0.0.170
+  wholeCluster: true
+  dpu:
+    enabled: false 
+  telemetry:
+    loggingSubsystem:
+      enabled: true
+    metricSubsystem:
+      enabled: true
+  certificate:
+    clusterIssuer: f5-cne-internal-ca
+  deploymentSize: Small 
+  registry:
+    uri: repo.f5.com
+    imagePullSecrets:
+    - name: far-pull-secret
+    imagePullPolicy: IfNotPresent
+  networkAttachments:
+  - external-net
+  - internal-net
+  - cnf-net
+  storageClassName: nfs
+  dynamicRouting:
+    enabled: true
+  # AFM
+  firewallACL:
+    enabled: true
+  pseudoCNI:
+    enabled: true
+  # Core dump files
+  coreCollection:
+    enabled: true
+  advanced:
+    envDiscovery:
+      enabled: false 
+      stopOnFail: true
+      runAfterSuccess: true
+    cneController:
+      env:
+      - name: "GSLB_DATACENTER_NAME"
+        value: "DC1"
+    demoMode:
+      enabled: true
+    maintenanceMode:
+      enabled: false
+    tmm:
+      env:
+      - name: TMM_CALICO_ROUTER
+        value: default
+      - name: TMM_DEFAULT_MTU
+        value: "9000"
+      - name: ZEBOS_STATE
+        value: legacy
+      - name: "TMM_MAPRES_ADDL_VETHS_ON_DP"
+        value: "TRUE"
+    pseudoCNI:
+      env:
+      - name: EXCLUDE_CIDR
+        value: "10.1.1.0/8,10.1.200.0/24,10.1.210.0/24,10.1.220.0/24,10.96.0.0/12,192.168.0.0/16"
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl appl[K[K[K[K[K[K[K[K[K[K[K[K[7mkubectl apply -f cne-instance-${CNE_INSTANCE_NAMESPACE}.yaml \[27m
+[7m  --namespace $CNE_INSTANCE_NAMESPACE[27m[A]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl apply -f cne-instance-${CNE_INSTANCE_NAMESPACE}.yaml \
+  --namespace $CNE_INSTANCE_NAMESPACE
+[?2004lerror: flag needs an argument: --namespace
+See 'kubectl apply --help' for usage.
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl apply -f cne-instance-f5-bnk-instance.yaml -n f5-cne[K[K[Kbnk-instance
+[?2004lcneinstance.k8s.f5.com/f5-bnk-instance created
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get [K[K[K[K[K[K[K[K[K[K[K[K#check resources are created and installed
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get pod -n f5-cne-core
+[?2004lNAME                                    READY   STATUS              RESTARTS      AGE
+crd-installer-nrtqh                     0/2     Completed           0             16s
+f5-crdconversion-86dd5bd97d-j79hx       0/2     ContainerCreating   0             1s
+f5-ipam-ctlr-6964c7c655-bg7tc           0/2     ContainerCreating   0             1s
+f5-lifecycle-operator-889d79b7c-mmq96   1/1     Running             1 (18h ago)   2d
+f5-observer-0                           0/2     ContainerCreating   0             0s
+f5-observer-operator-9f77ddd4f-2nq57    0/2     ContainerCreating   0             0s
+f5-rabbit-64479655fb-t8pvt              0/2     ContainerCreating   0             1s
+f5-spk-csrc-2gc7r                       0/2     ContainerCreating   0             0s
+f5-spk-csrc-6f2ff                       0/2     ContainerCreating   0             0s
+f5-spk-csrc-6r7hz                       0/2     ContainerCreating   0             0s
+f5-spk-csrc-j5m5x                       0/2     ContainerCreating   0             0s
+f5-toda-fluentd-699d895c98-x4b4l        0/1     Init:0/2            0             1s
+otel-collector-7975478f56-tcwzp         0/1     ContainerCreating   0             0s
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get pod -n f5-bnk-ion[K[K-[Knstance
+[?2004lNAME                                 READY   STATUS    RESTARTS      AGE
+f5-afm-789ff7bb49-5ht4s              2/2     Running   0             10s
+f5-cis-controller-7f9bb9d494-k6mkh   1/1     Running   1 (18h ago)   5d17h
+f5-cne-controller-6bcd5c449f-657xj   4/5     Running   0             10s
+f5-downloader-66b449488b-7fhn2       3/3     Running   0             10s
+f5-dssm-db-0                         2/3     Running   0             9s
+f5-dssm-sentinel-0                   2/3     Running   0             9s
+f5-tmm-6vlvx                         4/7     Running   0             10s
+f5-tmm-788k2                         4/7     Running   0             10s
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubect lget [K[K[Kk[K[K[Kdescri[K[K[K[K[K[Kget cneinstance f5-bnk-instance -n f5-bnk-instance
+[?2004l/usr/lib/python3/dist-packages/CommandNotFound/db/db.py:6: Warning: W:Unable to read /etc/apt/apt.conf.d/20auto-upgrades - open (13: Permission denied)
+  apt_pkg.init()
+/usr/lib/python3/dist-packages/CommandNotFound/CommandNotFound.py:139: Warning: W:Unable to read /etc/apt/apt.conf.d/20auto-upgrades - open (13: Permission denied)
+  apt_pkg.init()
+Command 'kubect' not found, did you mean:
+  command 'kubectx' from deb kubectx (0.9.5-1ubuntu0.4)
+Try: sudo apt install <deb name>
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubect get cneinstance f5-bnk-instance -n f5-bnk-instance[C[C[C[C[C[C[1@l
+[?2004lNAME              AGE
+f5-bnk-instance   52s
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ #next apply the license.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ cat f5-cne-cluster-license.yaml 
+[?2004lapiVersion: k8s.f5net.com/v1
+kind: License
+metadata:
+  name: f5-cne-cluster-license
+spec:
+  operationMode: "connected"
+  jwt: "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6InYxIiwiamt1IjoiaHR0cHM6Ly9wcm9kdWN0LmFwaXMuZjUuY29tL2VlL3YxL2tleXMvandrcyJ9.eyJzdWIiOiJGTkktZjcwNWUwOGYtODZjNC00ZGRiLWIxNDEtMzU1ZjhhMWM2ZTdkIiwiaWF0IjoxNzU1NDk0MzA1LCJpc3MiOiJGNSBJbmMuIiwiYXVkIjoidXJuOmY1OnRlZW0iLCJqdGkiOiJjNDQyYTc1MS03YmYyLTExZjAtOTg5Mi1kMzE2MmUxNThmNzciLCJmNV9vcmRlcl90eXBlIjoiZXZhbCJ9.CutZnIW30FE_t3p2pO2HzU_q-XTYQoaQAWXqTR_usTybUSLz5swPPMEFcYqhBEOJaoWrE5UYjqP4DSTQIab_uiPkKBDBFjSeIuFSBGvN-pdtlq_S-k_VBvH3Uzg2jORb_KAFT_QroR18D7t3tY1pB6-5o2xLGcF3HohfJBLhDZHoltowmEeCKaLHYJNOA9u8AQ0RsmKjG2RfPQsJ5Um2QNGQii6hrAvBU1XQT9U-hv-KAhJVqua6Nx5DhiWfRhSZkhCR880ydzy6-JK98kRYTC_zntZTc6wfRyPGYI82znhaiV224C-QqeLCOGI1mPzSxud_A1I3jgiJI1xMlXyIPXpknnJijwv6y8hC9Mfx2vrrl3kgYedHAy_3BPMeGVeF57qjaB6wP--LeM_im7P15isJqppYfM5pKCKRV4FRz2qaOJ2FPieFxYgRYJGo5eUfq7sNbgPPEG4Qm4OgwIAitMQ9Y7wSsHSv_Ym_PbgvRw57DCiN2kB6Yc1xTfMcmCNP1xPDnfQop4gvqGImi3R325906FFldrex2ssPMEl6FKT-sFGdEv0LI_7kP3Zoj70AemXosmaMnS6uDo5rA_cDhZA5RACLmYt_Zej_mOkc-x0FFPtBq4Ww4n16knpu8zBAqrbIeXBLBQmC9GLM0xLHGQ-3WQacF3sh6kSZd7XNNBw"
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl apply -f f5-cne-cluster-license.yaml -n f5-cne-core^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get license -n f5-cne-core
+[?2004lNAME                     STATE    MODE        ENTITLEMENT   ENVIRONMENT   EXPIRY                 DIGITALASSETID                         AGE
+f5-cne-cluster-license   Active   connected   eval          production    2026-06-10T06:46:57Z   eda1e85c-037d-4255-a923-847f8e289218   9d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # the installation steps are now complete.
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # a prerequie[Ksite is to install cert-manager v1.19.4
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # [7mkubectl create -f \[27m
+[7m  https://github.com/cert-manager/cert-manager/releases/download/<VERSION>/cert-manager.yaml \[27m
+[7m  ; kubectl wait --for=condition=ready pod --all \[27m
+[7m  --namespace cert-manager --timeout=120s[27m[A[A[A]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [C[Ckubectl create -f \
+  https://github.com/cert-manager/cert-manager/releases/download/<VERSION>/cert-manager.yaml \
+  ; kubectl wait --for=condition=ready pod --all \
+  --namespace cert-manager --timeout=120s[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[1P[1P[1P[1P[1P[1P[1P[1P[1P[1@v[1@1[1@.[1@1[1@9[1@.[1@4
+
+
+[?2004lbash: https://github.com/cert-manager/cert-manager/releases/download/v1.19.4/cert-manager.yaml: No such file or directory
+pod/cert-manager-cainjector-79dfb57945-ddxlt condition met
+pod/cert-manager-f48c47bd-4dvfc condition met
+pod/cert-manager-webhook-7ccb49fb7b-87r72 condition met
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ # show the cluster i[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kcrate[K[K[K[Kreat [Ke a cluster issuer named f5-cne-install [K-ca for al l[K[Kl install[K[K[K[K[K[K[Kcert management tasks in [K[K[K[K[K[K[K[K[Kneeds for bnk
+[?2004l[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl [K[K[K[K[K[K[K[Kcat f5-cne-cluster-license.yaml [K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kkubectl apply -f f5-cne-cluster-issuer.yaml^C[?2004l[?2004h[?2004l
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ kubectl get clusterissuers
+[?2004lNAME                        READY   AGE
+f5-cne-internal-ca          True    10d
+selfsigned-cluster-issuer   True    10d
+[?2004h]0;ubuntu@client: ~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[01;32mubuntu@client[00m:[01;34m~/bnkinstall/f5-bigip-k8s-manifest-2.3.0-3.2598.3-0.0.170[00m$ [?2004l
+exit
+
+Script done on 2026-05-21 04:14:15+00:00 [COMMAND_EXIT_CODE="0"]

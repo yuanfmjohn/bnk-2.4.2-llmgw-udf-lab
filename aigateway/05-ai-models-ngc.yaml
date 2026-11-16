@@ -1,0 +1,41 @@
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIModel
+metadata:
+  name: demo-deepseek-v41-flash
+  namespace: f5-bnk-instance
+spec:
+  name: deepseek-ai/deepseek-v4.1-flash
+  displayName: DeepSeek V4.1 Flash
+  tenantRef:
+    name: demo
+  deployments:
+  - name: ngc-deepseek
+    providerRef:
+      name: pk-demo-ngc
+    upstream: deepseek-ai/deepseek-v4.1-flash
+    weight: 1
+    state: Active
+    pricing:
+      inputPerMtok: 150000
+      outputPerMtok: 600000
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIModel
+metadata:
+  name: demo-gpt-oss-20b
+  namespace: f5-bnk-instance
+spec:
+  name: openai/gpt-oss-20b
+  displayName: OpenAI GPT OSS 20B
+  tenantRef:
+    name: demo
+  deployments:
+  - name: ngc-gpt-oss-20b
+    providerRef:
+      name: pk-demo-ngc
+    upstream: openai/gpt-oss-20b
+    weight: 1
+    state: Active
+    pricing:
+      inputPerMtok: 150000
+      outputPerMtok: 600000

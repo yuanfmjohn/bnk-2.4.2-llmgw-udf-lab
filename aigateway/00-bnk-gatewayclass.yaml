@@ -1,0 +1,6 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: bnk-gatewayclass
+spec:
+  controllerName: f5.com/f5-bnk-instance-f5-cne-controller

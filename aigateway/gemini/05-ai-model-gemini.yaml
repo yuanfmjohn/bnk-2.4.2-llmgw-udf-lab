@@ -1,0 +1,43 @@
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIModel
+metadata:
+  name: demo-gemini-flash
+  namespace: f5-bnk-instance
+spec:
+  tenantRef:
+    name: demo
+  name: gemini-flash-latest
+  displayName: "Google Gemini Flash Latest"
+  deployments:
+  - name: google-gemini
+    providerRef:
+      name: pk-demo-gemini
+    upstream: gemini-3.5-flash-lite
+    dialects: [gemini]
+    weight: 1
+    state: Active
+    pricing:
+      inputPerMtok: 150000
+      outputPerMtok: 600000
+---
+apiVersion: inference.k8s.f5.com/v1alpha1
+kind: AIModel
+metadata:
+  name: demo-gemini-35-flash-lite
+  namespace: f5-bnk-instance
+spec:
+  tenantRef:
+    name: demo
+  name: gemini-3.5-flash-lite
+  displayName: "Google Gemini 3.5 Flash Lite"
+  deployments:
+  - name: google-gemini-lite
+    providerRef:
+      name: pk-demo-gemini
+    upstream: gemini-3.5-flash-lite
+    dialects: [gemini]
+    weight: 1
+    state: Active
+    pricing:
+      inputPerMtok: 150000
+      outputPerMtok: 600000

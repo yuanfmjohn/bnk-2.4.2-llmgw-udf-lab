@@ -1,0 +1,35 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: ai-gateway
+  namespace: ai-inference
+spec:
+  gatewayClassName: f5-gateway-class
+  addresses:
+  - type: IPAddress
+    value: 10.1.200.82
+  listeners:
+  - name: http-ai
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: All
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ai-prompt-route
+  namespace: ai-inference
+spec:
+  parentRefs:
+  - name: ai-gateway
+    sectionName: http-ai
+  rules:
+  - matches:
+    - headers:
+      - name: Host
+        value: ai.llm.f5.local
+    backendRefs:
+    - name: ai-inference-svc
+      port: 80
