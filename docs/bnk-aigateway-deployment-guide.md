@@ -203,50 +203,49 @@ spec:
 
 ## 5. Console UI Access & Credentials
 
-The AI Gateway provides a web management console for monitoring LLM queries, latency distributions, and token consumption metrics.
+The AI Gateway provides a web management console (`f5-aigateway-console`) for monitoring LLM queries, latency distributions, token consumption metrics, and tenant governance.
 
-### Expose Console via NodePort or Ingress
+### Console Service & Access Methods
 
-To access the console outside the cluster (e.g. from the management workstation or `client` node), expose `f5-aigateway-console` on port 3000:
-
-```bash
-cat << 'EOF' | kubectl apply -f -
-apiVersion: v1
-kind: Service
-metadata:
-  name: f5-aigateway-console-nodeport
-  namespace: f5-bnk-instance
-spec:
-  type: NodePort
-  selector:
-    app.kubernetes.io/name: f5-aigateway-console
-  ports:
-  - port: 3000
-    targetPort: 3000
-    nodePort: 30964
-    protocol: TCP
-    name: http
-EOF
-```
-
-### Retrieve Administrator Credentials
-
-The platform creates administrative credentials in the Kubernetes Secret `f5-aigateway-admin`:
+BNK exposes `f5-aigateway-console` as a `NodePort` service on port `30964` (mapping to container port `3000`):
 
 ```bash
-# Retrieve Username
-kubectl get secret f5-aigateway-admin -n f5-bnk-instance -o jsonpath='{.data.username}' | base64 --decode
-echo ""
-
-# Retrieve Password
-kubectl get secret f5-aigateway-admin -n f5-bnk-instance -o jsonpath='{.data.password}' | base64 --decode
-echo ""
+kubectl get svc f5-aigateway-console -n f5-bnk-instance -o wide
 ```
 
-*Lab Access:*
-- **Username:** `admin`
-- **Password:** Retrieve via the `kubectl get secret f5-aigateway-admin` command above.
-- **Web URL:** `http://<node-ip>:30964` (e.g., `http://10.1.1.6:30964` or via SSH tunnel)
+*Access Options:*
+- **UDF Portal Shortcut:** Use the **`llmgw-console`** access method on **`worker4`** in the UDF lab UI.
+- **Direct NodePort URL:** `http://<node-ip>:30964` (for example, `http://10.1.1.9:30964` on `worker4` or any cluster node IP).
+- **SSH Local Port Forward (if NodePort is not directly reachable):**
+  ```bash
+  ssh -L 3000:10.1.1.9:30964 ubuntu@<controller-or-jump-host>
+  # Open http://localhost:3000
+  ```
+
+*(If deploying without the built-in NodePort service, create a custom `NodePort` service targeting `app.kubernetes.io/name: f5-aigateway-console` on port `3000` -> `nodePort: 30964`.)*
+
+### Retrieve System & Tenant Administrator Credentials
+
+The platform stores system-wide and per-tenant admin credentials in Kubernetes Secrets within namespace `f5-bnk-instance`:
+
+```bash
+# 1. System / Platform Admin (f5-aigateway-admin)
+kubectl get secret f5-aigateway-admin -n f5-bnk-instance -o jsonpath='{.data.username}' | base64 --decode; echo ""
+kubectl get secret f5-aigateway-admin -n f5-bnk-instance -o jsonpath='{.data.password}' | base64 --decode; echo ""
+
+# 2. Tenant Admin (aitenant-<tenant>-admin, e.g., demo / llmgw-demo)
+kubectl get secret aitenant-demo-admin -n f5-bnk-instance -o jsonpath='{.data.username}' | base64 --decode; echo ""
+kubectl get secret aitenant-demo-admin -n f5-bnk-instance -o jsonpath='{.data.password}' | base64 --decode; echo ""
+
+# List all AI Gateway admin secrets
+kubectl get secrets -n f5-bnk-instance | grep -E "f5-aigateway-admin|aitenant-.*-admin"
+```
+
+| Scope / Role | Kubernetes Secret (`f5-bnk-instance`) | Username | Password |
+| :--- | :--- | :--- | :--- |
+| **System / Platform Admin** | `f5-aigateway-admin` | `admin` | `********` *(retrieve via `kubectl get secret` above)* |
+| **Tenant `demo` Admin** | `aitenant-demo-admin` | `admin` | `********` *(retrieve via `kubectl get secret` above)* |
+| **Tenant `llmgw-demo` Admin** | `aitenant-llmgw-demo-admin` | `admin` | `********` *(retrieve via `kubectl get secret` above)* |
 
 ---
 

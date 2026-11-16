@@ -128,7 +128,29 @@ This verifies:
 - Unauthorized model (`gpt-4o-mini`) -> `HTTP/1.1 403 Forbidden` (`model_not_allowed`)
 - Invalid virtual key -> `HTTP/1.1 401 Unauthorized` (`token_not_found_in_db`)
 
-### 4. Verify OpenTelemetry Telemetry in ClickHouse
+### 4. Access the AI Gateway Console & Credentials
+
+The `f5-aigateway-console` service is exposed via `NodePort` (`3000:30964/TCP`) and via the **`llmgw-console`** UDF access shortcut on **`worker4`** (`http://<node-ip>:30964`, e.g., `http://10.1.1.9:30964`).
+
+Retrieve the System Admin (`f5-aigateway-admin`) and Tenant Admin (`aitenant-<tenant>-admin`) login credentials from namespace `f5-bnk-instance`:
+
+```bash
+# System Admin
+kubectl get secret f5-aigateway-admin -n f5-bnk-instance -o jsonpath='{.data.username}' | base64 --decode; echo ""
+kubectl get secret f5-aigateway-admin -n f5-bnk-instance -o jsonpath='{.data.password}' | base64 --decode; echo ""
+
+# Tenant 'demo' Admin
+kubectl get secret aitenant-demo-admin -n f5-bnk-instance -o jsonpath='{.data.username}' | base64 --decode; echo ""
+kubectl get secret aitenant-demo-admin -n f5-bnk-instance -o jsonpath='{.data.password}' | base64 --decode; echo ""
+```
+
+| Role | Secret (`f5-bnk-instance`) | Username | Password |
+| :--- | :--- | :--- | :--- |
+| **System Admin** | `f5-aigateway-admin` | `admin` | `********` *(decode secret above)* |
+| **Tenant `demo` Admin** | `aitenant-demo-admin` | `admin` | `********` *(decode secret above)* |
+| **Tenant `llmgw-demo` Admin** | `aitenant-llmgw-demo-admin` | `admin` | `********` *(decode secret above)* |
+
+### 5. Verify OpenTelemetry Telemetry in ClickHouse
 
 On `controller`, inspect the recorded inference and audit records in `otel.aigw_requests`:
 

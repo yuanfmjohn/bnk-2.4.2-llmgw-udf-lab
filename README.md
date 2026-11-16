@@ -19,3 +19,7 @@ This repository contains the validated deployment guides, Kubernetes manifests, 
    - `POST /v1/chat/completions` -> `HTTP/1.1 200 OK`
    - Governance enforcement -> `403 Forbidden` (`model_not_allowed`), `401 Unauthorized` (`token_not_found_in_db`)
    - Telemetry -> Verified in ClickHouse `otel.aigw_requests` (`principal_id`, `team_id`, `org_id`, token usage, and ~3 ms gateway overhead).
+4. **Console Access & Admin Credentials**:
+   - Console UI: `f5-aigateway-console` (`NodePort 3000:30964/TCP`, accessible at `http://<node-ip>:30964` or via UDF **`llmgw-console`** on **`worker4`**).
+   - System Admin secret: `f5-aigateway-admin` (`username: admin`, password `********` via `kubectl get secret -n f5-bnk-instance`).
+   - Tenant Admin secrets: `aitenant-demo-admin` and `aitenant-llmgw-demo-admin` (`username: admin`, passwords `********` via `kubectl get secret -n f5-bnk-instance`).
