@@ -5,3 +5,4 @@ access/*.pem
 ngc-api-key.txt
 google-aistudio-curl.txt
 aigateway/tests/demo_vkey.txt
+install/

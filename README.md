@@ -8,7 +8,6 @@ This repository contains the validated deployment guides, Kubernetes manifests, 
 - **[BNK AI Gateway Deployment & Operations Guide](docs/bnk-aigateway-deployment-guide.md)** — Enabling `aiGateway` on `CNEInstance`, `GatewayClass` and `F5BigDnsCache` integration, end-to-end Path 3 deployment (without `ocibnkctl`), governance & virtual keys, ClickHouse OpenTelemetry verification, and lab troubleshooting.
 - **[AI Gateway Lab Assets & Step-by-Step Walkthrough](aigateway/README.md)** — Sequentially numbered manifests (`00`–`09`), Google AI Studio (Gemini) primary configuration (`aigateway/gemini/`), NVIDIA NGC alternative provider option (`02`–`06`), governance bootstrap script (`aigateway/governance/setup_keys.py`), and client test suite (`aigateway/tests/run_test.sh`).
 - **[AI Inference Load Balancing Manifests](ai-loadbalance/)** — Reference Gateway API and DCGM GPU scrape manifests for backend inference load balancing.
-- **[Install Scripts](install/)** — Kubernetes `v1.31` base node bootstrap script (`k8s-1.31-setup.sh`) and installation session transcript (`bnk-install.txt`).
 
 ## Quick Validation Summary
 
